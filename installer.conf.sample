@@ -1,0 +1,16 @@
+DEF_PGPOOL_WATCHDOG=yes
+DEF_PGPOOL_HOST_ARR[0]=pool-alice
+DEF_PGPOOL_HOST_ARR[1]=pool-bob
+DEF_BACKEND_HOST_ARR[0]=db-alice
+DEF_BACKEND_PORT_ARR[0]=6543
+DEF_BACKEND_HOST_ARR[1]=db-alice
+DEF_BACKEND_PORT_ARR[1]=6544
+NETMASK=255.255.255.0
+DEF_PG_ADMIN_USER=admin
+DEF_PG_ADMIN_USER_PASSWORD=pgpool
+DEF_REPLICATION_MODE=stream
+DEF_delegate_IP='192.168.1.123'
+DEF_PGDATA_ARR[0]=/var/lib/pgsql/alice-data
+DEF_ARCHIVE_DIR_ARR[0]=/var/lib/pgsql/alice-arc
+DEF_PGDATA_ARR[1]=/var/lib/pgsql/bob-data
+DEF_ARCHIVE_DIR_ARR[1]=/var/lib/pgsql/bob-arc

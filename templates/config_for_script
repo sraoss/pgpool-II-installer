@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# ----
+# Return the node number from host name specified as argument.
+# If omitted, return the backend node number of master node.
+#
+# XXX: NOTE that This function does not consider more than three backend nodes.
+# ----
+function getNodeNum()
+{
+    local _MASTER_NODE_PGDATA=$1
+    local _DEST_NODE_HOST=$2
+
+    local _MASTER_NODE_PGPORT=
+    local _DEST_NODE_PGPORT=
+
+    if [ "${BACKEND_HOST_ARR[0]}" == "${BACKEND_HOST_ARR[1]}" ]; then
+        if [ -z $_DEST_NODE_HOST ]; then
+            _MASTER_NODE_PGPORT=$(awk '/^port/ {print $3}' "${_MASTER_NODE_PGDATA}/postgresql.conf")
+            for _INDEX in $(seq 0 $((${#BACKEND_HOST_ARR[@]} - 1))); do
+                if [ "${BACKEND_PORT_ARR[$_INDEX]}" == "${_MASTER_NODE_PGPORT}" ]; then
+                    RTN=${_INDEX}
+                    return 0
+                fi
+            done
+        else
+            _MASTER_NODE_PGPORT=$(awk '/^port/ {print $3}' "${_MASTER_NODE_PGDATA}/postgresql.conf")
+            for _INDEX in $(seq 0 $((${#BACKEND_HOST_ARR[@]} - 1))); do
+                if [ "${BACKEND_PORT_ARR[$_INDEX]}" != "${_MASTER_NODE_PGPORT}" ]; then
+                    RTN=${_INDEX}
+                    return 0
+                fi
+            done
+        fi
+    fi
+
+    if [ $# -eq 1 ]; then
+        RTN=${BACKEND_NODE_NUM}
+        return 0
+    fi
+
+    for _INDEX in $(seq 0 $((${#BACKEND_HOST_ARR[@]} - 1))); do
+        if [ ${BACKEND_NODE_NUM} -eq ${_INDEX} ]; then
+            continue
+        fi
+
+        if [ "${BACKEND_HOST_ARR[$_INDEX]}" == "${_DEST_NODE_HOST}" ]; then
+            RTN=${_INDEX}
+            return 0
+        fi
+    done
+
+    if [ "${RTN}" == "" ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Used for getNodeNum called by recovery_1st_stage_command.
+BACKEND_NODE_NUM=
+
+PGHOME=__PGHOME__
+PSQL=${PGHOME}/bin/psql
+PG_CTL=${PGHOME}/bin/pg_ctl
+
+PG_SUPER_USER=__PG_SUPER_USER__
+PGPOOL_LOG_DIR=__PGPOOL_LOG_DIR__

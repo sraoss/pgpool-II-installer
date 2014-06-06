@@ -1,0 +1,53 @@
+#!/bin/bash
+# Force to flush current value of sequences to xlog
+
+MASTER_NODE_PGDATA=$1
+DEST_HOST=$2
+DEST_NODE_PGDATA=$3
+
+# ---------------------------------------------------------------------
+# prepare
+# ---------------------------------------------------------------------
+
+source /etc/pgpool-II/config_for_script
+
+SCRIPT_LOG="${PGPOOL_LOG_DIR}/recovery.log"
+
+# Get the node number of master
+getNodeNum ${MASTER_NODE_PGDATA} || exit 1
+MASTER_NODE_NUM=${RTN}
+
+# Get the node number of destination
+getNodeNum ${MASTER_NODE_PGDATA} ${DEST_NODE_HOST} || exit 1
+DEST_NODE_NUM=${RTN}
+
+function doSQL()
+{
+    local _DB=$1
+    local _SQL=$2
+
+    ${PSQL} -p ${BACKEND_PORT_ARR[$MASTER_NODE_NUM]}-U ${PG_SUPER_USER} -d ${_DB} -t -c "${_SQL}"
+}
+
+echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
+date >> ${SCRIPT_LOG}
+echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
+echo "" >> ${SCRIPT_LOG}
+
+# ---------------------------------------------------------------------
+# Get dbnames
+# ---------------------------------------------------------------------
+
+doSQL template1 'SELECT datname FROM pg_database WHERE NOT datistemplate AND datallowconn'
+
+# ---------------------------------------------------------------------
+# Force to flush current value of sequences to xlog
+# ---------------------------------------------------------------------
+
+while read i
+do
+  if [ "${i}" != "" ]; then
+    doSQL ${i} "SELECT setval(oid, nextval(oid)) FROM pg_class WHERE relkind = 'S'"
+  fi
+done
+doSQL template1 "SELECT pgpool_switch_xlog('${BACKEND_ARCHIVE_DIR_ARR[$MASTER_NODE_NUM]}')"
