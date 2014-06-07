@@ -7,7 +7,7 @@ Overview
 This is the package of scripts to create [pgpool-II](http://www.pgpool.net)'s installer.  
 [NOTICE] You should get RPM packages of pgpool-II and pgpoolAdmin by youeself.
 
-### What the installer for pgpool can do
+### What the installer for pgpool can do:
 * Install pgpool-II and pgpoolAdmin into both of servers for pgpool-II and backend nodes for PostgreSQL by RPM.
 * Generate config files for pgpool-II, pgpoolAdmin and PostgreSQL.
  * master-slave mode with streaming replication / pgpool's native replication
@@ -30,7 +30,7 @@ How to make the installer
     $ wget http://www.pgpool.net/download.php?f=pgpool-II-pg{pg_version}-{version}.pgdg.x86_64.rpm
     $ wget http://www.pgpool.net/download.php?f=pgpoolAdmin-{version}.pgdg.noarch.rpm
 
-These RPM packages can download from [here](http://pgpool.net/mediawiki/index.php/Downloads).
+These RPM packages can be downloaded from [here](http://pgpool.net/mediawiki/index.php/Downloads).
 
 ### 2. Edit the config file for installer.
 
