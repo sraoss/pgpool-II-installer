@@ -1,6 +1,11 @@
 pgpool-II-installer
 ===================
 
+Version
+-------
+
+1.0 beta1
+
 Overview
 --------
 
@@ -52,22 +57,28 @@ Edit lib/param.sh.
 How to use the installer
 ------------------------
 
-### case 1) By responsive way
+### case 1) Interactive
 
     $ su -
 
     # whoami
     root
+    # cd /path/to/installer
     # ./install.sh
 
 After answering some questions, installation and setup will start.
 
-### case 2) With the config file
+### case 2) Not interactive
 
 If you create the config file called "installer.conf" before you execute install.sh, install.sh uses the parameters in the file as the answers of questions by the script.
 
     $ cp installer.conf.sample installer.conf
     $ edit installer.conf
+
+    # whoami
+    root
+    # cd /path/to/installer
+    # ./install.sh
 
 #### Parameters
 
