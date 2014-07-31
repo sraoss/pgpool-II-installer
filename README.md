@@ -84,6 +84,7 @@ If you create the config file called "installer.conf" before you execute install
 
 | parameter's name           | example                   | category    | description                                              |
 |----------------------------|---------------------------|-------------|----------------------------------------------------------|
+| DEF_PGPOOL_WATCHDOG        | yes                       | pgpool-II   | use watchdog                                             |
 | DEF_PGPOOL_HOST_ARR[0]     | pool-alice                | pgpool-II   | hostname of 1st pgpool server                            |
 | DEF_PGPOOL_HOST_ARR[1]     | pool-bob                  | pgpool-II   | hostname of 2nd pgpool server (only when using watchdog) |
 | DEF_REPLICATION_MODE       | stream                    | pgpool-II   | pgpool's replication mode                                |
