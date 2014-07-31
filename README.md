@@ -57,8 +57,6 @@ Edit lib/param.sh.
 How to use the installer
 ------------------------
 
-### case 1) Interactive
-
     $ su -
 
     # whoami
@@ -68,9 +66,9 @@ How to use the installer
 
 After answering some questions, installation and setup will start.
 
-### case 2) Not interactive
+### (Advanced)
 
-If you create the config file called "installer.conf" before you execute install.sh, install.sh uses the parameters in the file as the answers of questions by the script.
+If you create the config file called "installer.conf" before you execute install.sh, install.sh uses the parameters in the file as the default value of questions by the script.
 
     $ cp installer.conf.sample installer.conf
     $ edit installer.conf
