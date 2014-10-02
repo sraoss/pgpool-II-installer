@@ -301,9 +301,9 @@ function setupBackend()
     local _NODE_NUM=$1
 
     echo "[1/3] Install pgpool libralies."
-    scp ${PGPOOL_RPM} ${BACKEND_HOST_ARR[$_NODE_NUM]}:/tmp
+    scp ${PGPOOL_EXTENSIONS_RPM} ${BACKEND_HOST_ARR[$_NODE_NUM]}:/tmp
     doViaSSH root ${BACKEND_HOST_ARR[$_NODE_NUM]} "
-        rpm -ivh /tmp/${PGPOOL_RPM} && rm -f /tmp/${PGPOOL_RPM}
+        rpm -ivh /tmp/${PGPOOL_EXTENSIONS_RPM} && rm -f /tmp/${PGPOOL_EXTENSIONS_RPM} && mkdir /etc/pgpool-II
     "
     if [ $? -ne 0 ]; then
         echo "Failed."
