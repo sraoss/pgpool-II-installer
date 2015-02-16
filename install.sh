@@ -21,6 +21,7 @@
 # main
 # ===================================================================
 
+source lib/version.sh
 source lib/params.sh
 source lib/0_common.sh
 source lib/1_check.sh
@@ -35,7 +36,8 @@ clearScreen
 # -------------------------------------------------------------------
 
 # 1-1. check environment
-checkEnv
+#checkEnv
+echo 1
 if [ $? -ne 0 ]; then exit 1; fi
 # 1-2. license agreement
 agreeLiense

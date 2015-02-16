@@ -4,7 +4,7 @@ pgpool-II-installer
 Version
 -------
 
-1.0 beta1
+1.1
 
 Overview
 --------
@@ -32,21 +32,17 @@ How to make the installer
 
     $ git clone https://github.com/sraoss/pgpool-II-installer
     $ cd pgpool-II-installer
-    $ wget http://www.pgpool.net/download.php?f=pgpool-II-pg{pg_version}-{version}.pgdg.x86_64.rpm
-    $ wget http://www.pgpool.net/download.php?f=pgpoolAdmin-{version}.pgdg.noarch.rpm
+    $ vi make_package.sh
+    $ ./make_package.sh
 
 These RPM packages can be downloaded from [here](http://pgpool.net/mediawiki/index.php/Downloads).
 
-### 2. Edit the config file for installer.
-
-Edit lib/param.sh.
-
-    $ edit lib/param.sh
-
-#### Parameters
+#### Parameters in make_package.sh
 
 | parameter's name | example |  category   | description                     |
 |------------------|---------|-------------|---------------------------------|
+| CENTOS_VERSION   | 6       | OS          | major version                   |
+| ARCHITECTURE     | x86_64  | OS          | architecture                    |
 | PG_MAJOR_VERSION | 9.3     | PostgreSQL  | major version                   |
 | MAJOR_VERSION    | 3.3     | pgpool-II   | major version                   |
 | P_VERSION        | 3.3.3   | pgpool-II   | full version                    |
