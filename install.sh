@@ -36,8 +36,7 @@ clearScreen
 # -------------------------------------------------------------------
 
 # 1-1. check environment
-#checkEnv
-echo 1
+checkEnv
 if [ $? -ne 0 ]; then exit 1; fi
 # 1-2. license agreement
 agreeLiense
@@ -149,6 +148,7 @@ if [ "${USE_WATCHDOG}" == "yes" ]; then
 
     doViaSSH root ${PGPOOL_HOST_ARR[1]} "
         cd ${REMOTE_WORK_DIR}
+        source lib/version.sh
         echo \"USE_WATCHDOG=yes\" >> lib/params.sh
         source lib/params.sh
         source lib/0_common.sh
@@ -159,6 +159,7 @@ if [ "${USE_WATCHDOG}" == "yes" ]; then
     subtitle "Setup pgpoolAdmin"
     doViaSSH root ${PGPOOL_HOST_ARR[1]} "
         cd ${REMOTE_WORK_DIR}
+        source lib/version.sh
         source lib/params.sh
         source lib/0_common.sh
         source lib/4_install.sh
