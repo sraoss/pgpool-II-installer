@@ -1,0 +1,500 @@
+<html>
+
+<head>
+<style type="text/css">
+pre {
+    background: #fafafa;
+    border: 1px solid #999999;
+    padding: 7px;
+}
+</style>
+
+</head>
+
+<body>
+<h1>Installer</h1>
+
+<h2>Command</h2>
+<pre>
+[root@webserver1 installer2-pg94-3.4.2_rhel-6-x86_64]# ./install.sh 
+</pre>
+
+<h2>Setup</h2>
+<h3>page 1</h3>
+<pre>
+check for installation ...
+
+OK.
+=================================================================
+
+Copyright (c) 2003-2013		PgPool Global Development Group
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that copyright notice and this permission
+notice appear in supporting documentation, and that the name of the
+author not be used in advertising or publicity pertaining to
+distribution of the software without specific, written prior
+permission. The author makes no representations about the
+suitability of this software for any purpose.  It is provided "as
+is" without express or implied warranty.
+
+=================================================================
+[input] Do you accept the end user software license agreement? [yes/no] (defalt: yes) : 
+
+
+[input] Do you edit configs? If no, install will start right now without configuration. [yes/no] (defalt: yes) : 
+
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 2</h3>
+<pre>
+======================================================================
+Configuring Hosts, User, SSH
+======================================================================
+
+----------------------------------------------------------------------
+Watchdog
+----------------------------------------------------------------------
+
+[input] Do you use the watchdog feature of pgpool? [yes/no] (defalt: yes) : 
+yes
+
+----------------------------------------------------------------------
+Specify the nodes in this cluster
+----------------------------------------------------------------------
+
+* Hosts where pgpool runs
+[ pgpool #0 ]
+[input] Specify hostname or IP address : 
+webserver1
+
+[ pgpool #1 ]
+[input] Specify hostname or IP address : 
+webserver2
+
+
+* Hosts where PostgreSQL runs
+
+[ PostgreSQL #0 ]
+[input] Specify hostname or IP address : 
+dbserver1
+[input] Specify port number (default: 5432) : 
+5432
+
+[ PostgreSQL #1 ]
+[input] Specify hostname or IP address : 
+dbserver2
+[input] Specify port number (default: 5432) : 
+5432
+
+[ netmask ]
+[input] Specify netmask (default: 255.255.255.0) : 255.255.255.0
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 3</h3>
+<pre>
+======================================================================
+Configuring Hosts, User, SSH
+======================================================================
+
+Create /home/apache as apache's home directory.
+This account is currently not available.
+Httpd must be stopped. Stop httpd
+Stopping httpd:                                            [  OK  ]
+Modify apache user's info.
+Try to execute 'su - apache'.
+
+----------------------------------------------------------------------
+Setup password-less access over SSH [ pgpool#0 ]
+----------------------------------------------------------------------
+
+* Setup SSH from webserver1 ...
+
+[ssh] root@webserver1-> root@webserver1
+Create the new SSH key.
+Copy the public key to root@webserver1.
+root@webserver1's password: 
+Try SSH...OK.
+
+[ssh] root@webserver1-> root@webserver2
+The SSH key for @webserver1 was found. Use /root/.ssh/id_rsa.
+Copy the public key to root@webserver2.
+root@webserver2's password: 
+Try SSH...OK.
+
+----------------------------------------------------------------------
+Setup password-less access over SSH [ pgpool#1 ]
+----------------------------------------------------------------------
+
+* Setup SSH from webserver2 ...
+
+[1/2] Setup apache's home directory.
+[2/2] Copy the same private keys as root@webserver1.
+va
+----------------------------------------------------------------------
+Setup password-less access over SSH [ PostgreSQL#0 ]
+----------------------------------------------------------------------
+
+* Setup SSH from dbserver1 ...
+
+[1/1] Copied the same private keys as root@webserver1.
+[ssh] root@webserver1-> root@dbserver1
+The SSH key for @webserver1 was found. Use /root/.ssh/id_rsa.
+Copy the public key to root@dbserver1.
+root@dbserver1's password: 
+Try SSH...OK.
+
+
+----------------------------------------------------------------------
+Setup password-less access over SSH [ PostgreSQL#1 ]
+----------------------------------------------------------------------
+
+* Setup SSH from dbserver2 ...
+
+[1/1] Copied the same private keys as root@webserver1.
+[ssh] root@webserver1-> root@dbserver2
+The SSH key for @webserver1 was found. Use /root/.ssh/id_rsa.
+Copy the public key to root@dbserver2.
+root@dbserver2's password: 
+Try SSH...OK.
+
+
+
+----------------------------------------------------------------------
+Check PostgreSQL installed in each backends
+----------------------------------------------------------------------
+
+Confirm if there is PostgreSQL in dbserver1.
+Confirm if there is PostgreSQL in dbserver2.
+
+Hit Enter key to continue...
+</pre>
+
+
+<h3>page 4</h3>
+<pre>
+======================================================================
+Editting conf files (pgpool#0: webserver1)
+======================================================================
+
+----------------------------------------------------------------------
+[pgpool-II] Configuration for PCP
+----------------------------------------------------------------------
+
+[input] Do you edit pcp.conf now? [yes/no] (defalt: yes) : 
+yes
+[input] username for pgpoolAdmin (defalt: admin) : admin
+[input] this user's password (default: pgpool) : pgpool
+
+======================================================================
+[pgpool-II] Configuration for pgpool
+======================================================================
+
+[input] Do you edit pgpool.conf now? [yes/no] (defalt: yes) : 
+yes
+
+----------------------------------------------------------------------
+Replication
+----------------------------------------------------------------------
+
+[input] Which replication mode do you use?
+    native: native replication mode
+    stream: master slave mode with streaming replication
+stream
+[input] Do you use load balancing? [yes/no] (defalt: yes) : 
+yes
+[input] Do you use on memory query cache with shared memory? [yes/no] (defalt: no) : 
+no
+----------------------------------------------------------------------
+Watchdog
+----------------------------------------------------------------------
+
+[input] delegate IP address : 192.168.1.100
+[input] method of watchdog lifecheck (heartbeat / query)
+heartbeat
+
+
+Hit Enter key to continue...
+</pre>
+
+
+<h3>page 5</h3>
+<pre>
+======================================================================
+[pgpool-II] Configuration for pgpool
+======================================================================
+
+----------------------------------------------------------------------
+Backend nodes
+----------------------------------------------------------------------
+
+[ PostgreSQL #0 ]
+[1/2] Data directory
+
+[input] Data directory (default: /usr/pgsql-9.4/data) : /usr/pgsql-9.4/data
+Check if the specified directory is empty...OK.
+Create the new directory...OK.
+
+[2/2] Archive directory
+
+[input] the directory where to archive a logfile segment (default: /var/lib/pgsql/archivedir) : /var/lib/pgsql/archivedir
+Check if the specified directory is empty...OK.
+Create the new directory...OK.
+
+[ PostgreSQL #1 ]
+[1/2] Data directory
+
+[input] Data directory (default: /usr/pgsql-9.4/data) : /usr/pgsql-9.4/data
+Check if the specified directory is empty...OK.
+Create the new directory...OK.
+
+[2/2] Archive directory
+
+[input] the directory where to archive a logfile segment (default: /var/lib/pgsql/archivedir) : /var/lib/pgsql/archivedir
+Check if the specified directory is empty...OK.
+Create the new directory...OK.
+
+
+----------------------------------------------------------------------
+Health check
+----------------------------------------------------------------------
+
+Health check will be executed by postgres' in 10 seconds interval.
+
+----------------------------------------------------------------------
+Fail over & Online recovery
+----------------------------------------------------------------------
+
+Failover and Online recovery  will be executed by postgres'.
+Setup for streaming replication mode.
+Streaming replication check will be executed by 'postgres'.
+
+======================================================================
+[pgpool-II] Configuration for pgpoolAdmin ...
+======================================================================
+
+[input] Do you edit pgmgt.conf.php now? [yes/no] (defalt: yes) : 
+yes
+[input] Which language do you use? (en/fr/ja/zh_cn)
+ja
+
+======================================================================
+[PostgreSQL] Configuration
+======================================================================
+
+[input] Do you edit postgresql.conf now? [yes/no] (defalt: yes) : 
+yes
+[1/3] Create config for failover and online recovery. 
+[2/3] Put scripts for failover
+[3/3] Put postgresql.conf.
+
+======================================================================
+Editting conf files (pgpool#1: webserver2)
+======================================================================
+
+[1/1] Modify pgpool.conf created for pgpool#0 to use watchdog.
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 6</h3>
+<pre>
+======================================================================
+Installation (pgpool#0: webserver1)
+======================================================================
+
+----------------------------------------------------------------------
+Setup pgpool-II
+----------------------------------------------------------------------
+
+[input] Do you install pgpool really? [yes/no] (defalt: yes) : 
+yes
+[1/4}] Install packages ... 
+warning: pgpool-II-pg94-3.4.2-1pgdg.rhel6.x86_64.rpm: Header V4 RSA/SHA1 Signature, key ID 60ae0e48: NOKEY
+Preparing...                ########################################### [100%]
+   1:pgpoolAdmin            ########################################### [ 50%]
+   2:pgpool-II-pg94         ########################################### [100%]
+
+OK.
+
+[2/4] Overwrite pgpool.conf...OK.
+[3/4] Overwrite pcp.conf...
+[4/4] Setup watchdog ...
+Setup the directory where copied sbin commands are put in.
+Copy original ifconfig and aprping into /var/private/nobody/sbin.
+OK.
+
+----------------------------------------------------------------------
+Setup pgpoolAdmin
+----------------------------------------------------------------------
+
+[1/4] Overwrite pgmgt.conf.php...OK.
+[2/4] Setup /var/run/pgpool/ as the directry for pgpool's pid file...OK.
+[3/4] Setup /var/log/pgpool as pgpool's log directory...OK.
+[4/4] Setup /var/www/html/pgpoolAdmin as pgpoolAdmin's work directory...OK.
+
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 7</h3>
+<pre>
+======================================================================
+Installation (pgpool#1: webserver2)
+======================================================================
+
+----------------------------------------------------------------------
+Setup pgpool-II
+----------------------------------------------------------------------
+
+
+[input] Do you install pgpool really? [yes/no] (defalt: yes) : 
+yes
+[1/4}] Install packages ... 
+warning: pgpool-II-pg94-3.4.2-1pgdg.rhel6.x86_64.rpm: Header V4 RSA/SHA1 Signature, key ID 60ae0e48: NOKEY
+Preparing...                ##################################################
+pgpoolAdmin                 ##################################################
+pgpool-II-pg94              ##################################################
+
+OK.
+
+[2/4] Overwrite pgpool.conf...OK.
+[3/4] Overwrite pcp.conf...
+[4/4] Setup watchdog ...
+Setup the directory where copied sbin commands are put in.
+Copy original ifconfig and aprping into /var/private/nobody/sbin.
+OK.
+
+----------------------------------------------------------------------
+Setup pgpoolAdmin
+----------------------------------------------------------------------
+
+[1/4] Overwrite pgmgt.conf.php...OK.
+[2/4] Setup /var/run/pgpool/ as the directry for pgpool's pid file...OK.
+[3/4] Setup /var/log/pgpool as pgpool's log directory...OK.
+[4/4] Setup /var/www/html/pgpoolAdmin as pgpoolAdmin's work directory...OK.
+
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 8</h3>
+<pre>
+======================================================================
+Setup backend nodes of PostgreSQL
+======================================================================
+
+----------------------------------------------------------------------
+Setup backend node (postgres#0: dbserver1)
+----------------------------------------------------------------------
+
+[1/3] Install pgpool libralies.
+pgpool-II-pg94-extensions-3.4.2-1pgdg.rhel6.x86_64.rpm                                   100%   24KB  24.3KB/s   00:00    
+warning: /tmp/pgpool-II-pg94-extensions-3.4.2-1pgdg.rhel6.x86_64.rpm: Header V4 RSA/SHA1 Signature, key ID 60ae0e48: NOKEY
+Preparing...                ##################################################
+pgpool-II-pg94-extensions   ##################################################
+
+[2/3] Initalize database...
+Stop PostgreSQL if exists.
+chown postgres:postgres /usr/pgsql-9.4/data
+Set owner of the data directgory.
+initdb ... 
+OK.
+
+
+[3/3] Put configuration files.
+Overwrite postgresql.conf and pg_hba.conf.
+Put scripts for online recovery ...
+- /etc/pgpool-II/config_for_script
+- /usr/pgsql-9.4/data/pgpool_remote_start
+- /usr/pgsql-9.4/data/basebackup-stream.sh
+- /usr/pgsql-9.4/data/recovery.done
+
+----------------------------------------------------------------------
+Setup backend node (postgres#1: dbserver2)
+----------------------------------------------------------------------
+
+[1/3] Install pgpool libralies.
+pgpool-II-pg94-extensions-3.4.2-1pgdg.rhel6.x86_64.rpm                                   100%   24KB  24.3KB/s   00:00    
+warning: /tmp/pgpool-II-pg94-extensions-3.4.2-1pgdg.rhel6.x86_64.rpm: Header V4 RSA/SHA1 Signature, key ID 60ae0e48: NOKEY
+Preparing...                ##################################################
+pgpool-II-pg94-extensions   ##################################################
+
+[2/3] Initalize database...
+Stop PostgreSQL if exists.
+chown postgres:postgres /usr/pgsql-9.4/data
+Set owner of the data directgory.
+initdb ... 
+OK.
+
+
+[3/3] Put configuration files.
+Overwrite postgresql.conf and pg_hba.conf.
+Put scripts for online recovery ...
+- /etc/pgpool-II/config_for_script
+- /usr/pgsql-9.4/data/pgpool_remote_start
+- /usr/pgsql-9.4/data/basebackup-stream.sh
+- /usr/pgsql-9.4/data/recovery.done
+
+----------------------------------------------------------------------
+Prepare the first failover
+----------------------------------------------------------------------
+
+[1/4] Put scripts for failover.
+config_for_script                                                                        100% 2244     2.2KB/s   00:00    
+config_for_script                                                                        100% 2244     2.2KB/s   00:00    
+[2/4] Set the owner and permission of scripts.
+[3/4] Created archive directory.
+[4/4] Regist pgpool's funtions.
+Create admin user in the database cluster...OK.
+Create extension: pgpool_regclass...Failed.
+Please install pgpool_regclass() manually.
+Continuing anyway.
+
+Create extension: pgpool_recovery...OK.
+OK.
+
+
+Hit Enter key to continue...
+</pre>
+
+<h3>page 9</h3>
+<pre>
+======================================================================
+Completed!
+======================================================================
+
+   * See pgpoolAdmin.
+         http:///pgpoolAdmin/
+   * Do online recovery of node 1 from pgpoolAdmin
+</pre>
+
+
+<h2>installer.conf</h2>
+<pre>
+[root@webserver1 installer2-pg94-3.4.2_rhel-6-x86_64]# cat installer.conf
+DEF_PGPOOL_WATCHDOG=yes
+DEF_PGPOOL_HOST_ARR[0]=webserver1
+DEF_PGPOOL_HOST_ARR[1]=webserver2
+DEF_BACKEND_HOST_ARR[0]=dbserver1
+DEF_BACKEND_PORT_ARR[0]=5432
+DEF_BACKEND_HOST_ARR[1]=dbserver2
+DEF_BACKEND_PORT_ARR[1]=5432
+NETMASK=255.255.255.0
+DEF_PG_ADMIN_USER=admin
+DEF_PG_ADMIN_USER_PASSWORD=pgpool
+DEF_REPLICATION_MODE=stream
+DEF_delegate_IP='192.168.1.100'
+DEF_PGDATA_ARR[0]=/usr/pgsql-9.4/data
+DEF_ARCHIVE_DIR_ARR[0]=/var/lib/pgsql/archivedir
+DEF_PGDATA_ARR[1]=/usr/pgsql-9.4/data
+DEF_ARCHIVE_DIR_ARR[1]=/var/lib/pgsql/archivedir
+</pre>
+</body>
+</html>
