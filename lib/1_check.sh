@@ -53,11 +53,9 @@ function checkEnv()
     if [ $? -ne 0 ]; then return 1; fi
     hasPackage "httpd" "Apache (httpd)"
     if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "php-pgsql" "PHP (php-pgsql)"
+    hasPackage "php.*-pgsql" "PHP (php-pgsql)"
     if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "php-mbstring" "PHP (php-mbstring)"
-    if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "php-[45]" "PHP"
+    hasPackage "php.*-mbstring" "PHP (php-mbstring)"
     if [ $? -ne 0 ]; then return 1; fi
 
     # root
