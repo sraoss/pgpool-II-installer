@@ -4,12 +4,12 @@
 # configuration
 # ---------------------------------------------------------------------
 
-CENTOS_VERSION_ARR=(6 7)
+CENTOS_VERSION_ARR=(6)
 ARCHITECTURE_ARR=(x86_64)
 
 MAJOR_VERSION=3.4
-P_VERSION=3.4.1
-P_RELEASE=2
+P_VERSION=3.4.2
+P_RELEASE=1
 P_RPM_VERSION=${P_VERSION}-${P_RELEASE}
 
 A_VERSION=3.4.1
@@ -64,6 +64,15 @@ function package()
         cp -rf ../../${_FILE} .
     done
 
+    case ${MAJOR_VERSION} in
+        3.4 )
+            cp ../pgpool-II-${P_VERSION}/src/sample/pgpool.conf.sample templates/
+            ;;
+        * )
+            cp ../pgpool-II-${P_VERSION}/pgpool.conf.sample templates/
+            ;;
+    esac
+
     echo
     echo "----"
     echo "download RPM"
@@ -71,7 +80,7 @@ function package()
     echo
 
     wget ${_BASE_URL}/${_PGPOOL_PG}-${P_RPM_VERSION}pgdg.rhel${_CENTOS_VERSION}.${_ARCHITECTURE}.rpm
-        wget ${_BASE_URL}/${_PGPOOL_PG}-extensions-${P_RPM_VERSION}pgdg.rhel${_CENTOS_VERSION}.${_ARCHITECTURE}.rpm
+    wget ${_BASE_URL}/${_PGPOOL_PG}-extensions-${P_RPM_VERSION}pgdg.rhel${_CENTOS_VERSION}.${_ARCHITECTURE}.rpm
     wget ${_BASE_URL}/pgpoolAdmin-${A_RPM_VERSION}pgdg.rhel${_CENTOS_VERSION}.noarch.rpm
 
     echo
@@ -122,6 +131,11 @@ rm -rf work
 mkdir work
 cd work
 
+TAR="pgpool-II-${P_VERSION}.tar.gz"
+wget http://www.pgpool.net/download.php?f=${TAR} -O ${TAR}
+tar xfz ${TAR}
+rm ${TAR}
+
 for CENTOS_VERSION in ${CENTOS_VERSION_ARR[@]}; do
     for ARCHITECTURE in ${ARCHITECTURE_ARR[@]}; do
         for PG_MAJOR_VERSION in ${PG_MAJOR_VERSION_ARR[@]}; do
@@ -129,5 +143,7 @@ for CENTOS_VERSION in ${CENTOS_VERSION_ARR[@]}; do
         done
     done
 done
+
+rm -rf pgpool-II-${P_VERSION}
 
 ls *.tar.gz
