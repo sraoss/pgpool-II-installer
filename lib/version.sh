@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# CentOS
+CENTOS_VERSION=6
+
+# PostgreSQL
+PG_MAJOR_VERSION=9.4
+
+# pgpool-II
+MAJOR_VERSION=3.4
+P_VERSION=3.4.2
+P_RELEASE=1
+
+# pgpoolAdmin
+A_VERSION=3.4.1
+A_RELEASE=2
