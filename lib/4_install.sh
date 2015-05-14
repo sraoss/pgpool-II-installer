@@ -24,14 +24,14 @@ function _installRPM()
 # ----
 function copySbin()
 {
-    echo "Setup the directory where copied sbin commands are put in."
+    echo "Setting up the directory where copied sbin commands are put in."
     if [ ! -e ${NOBODY_SBIN} ]; then
         mkdir -p ${NOBODY_SBIN} || return 1
     fi
     chown ${APACHE_USER}:${APACHE_USER} ${NOBODY_SBIN}
     chmod 700 ${NOBODY_SBIN}
 
-    echo "Copy original ifconfig and aprping into ${NOBODY_SBIN}."
+    echo "Copying original ifconfig and aprping into ${NOBODY_SBIN}."
     cp /sbin/ifconfig ${NOBODY_SBIN}
     cp /sbin/arping ${NOBODY_SBIN}
     chmod 4755 ${NOBODY_SBIN}/ifconfig
@@ -76,15 +76,15 @@ function _doInitDB()
     local _DEST_DIR="${PGDATA_ARR[$_NODE_NUM]}"
     local _INITDB_STR=""
 
-    echo "Stop PostgreSQL if exists."
+    echo "Stopping PostgreSQL if exists."
     echo "chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${_DEST_DIR}"
     chown ${PG_SUPER_USER} ${PGHOME}
     _doPgCommand ${_NODE_NUM} "pg_ctl -D ${_DEST_DIR} stop -m immediate"
 
-    echo "Set owner of the data directgory."
+    echo "Setting owner of the data directgory."
     doViaSSH root ${_DEST_HOST} "chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${_DEST_DIR}"
 
-    echo "initdb ... "
+    echo "Executing initdb ... "
     _INITDB_STR="initdb -D ${_DEST_DIR} ${INITDB_OPTION}"
     _doPgCommand ${_NODE_NUM} "${_INITDB_STR}"
 
@@ -106,12 +106,12 @@ function _putPostgresConfigs()
     local _PGDATA="${PGDATA_ARR[$_NODE_NUM]}"
 
     #  Put conf files (postgresql.conf is renamed when be editting).
-    echo "Overwrite postgresql.conf and pg_hba.conf."
+    echo "Overwriting postgresql.conf and pg_hba.conf."
     _sendToPgData ${_NODE_NUM} editted/postgresql.conf-postgres${_NODE_NUM} postgresql.conf
     _sendToPgData ${_NODE_NUM} editted/pg_hba.conf pg_hba.conf
 
     # Setup online recovery.
-    echo "Put scripts for online recovery ..."
+    echo "Putting scripts for online recovery ..."
 
     echo "- ${PGPOOL_CONF_DIR}/config_for_script"
     sed -i -e "s/\(BACKEND_NODE_NUM=\).*$/\1${_NODE_NUM}/" editted/config_for_script
@@ -133,7 +133,7 @@ function _putPostgresConfigs()
         _sendToPgData ${_NODE_NUM} editted/pgpool_recovery_pitr pgpool_recovery_pitr
     fi
 
-    doViaSSH root ${_DEST_HOST} "]
+    doViaSSH root ${_DEST_HOST} "
         mkdir ${PGPOOL_LOG_DIR}
         chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${PGPOOL_LOG_DIR}
         chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${_PGDATA}/*
@@ -154,7 +154,7 @@ function _registPgFuncs()
     sleep 3
     # doViaSSH root ${BACKEND_HOST_ARR[$_NODE_NUM]} "ps auwwx | grep postgres"
 
-    echo -n "Create admin user in the database cluster..."
+    echo -n "Creating admin user in the database cluster..."
     _doQuery ${_NODE_NUM} "CREATE USER ${PG_ADMIN_USER} PASSWORD '${PG_ADMIN_USER_PASSWORD}' SUPERUSER"
     if [ $? -ne 0 ]; then
         echo "Failed."
@@ -165,18 +165,22 @@ function _registPgFuncs()
         echo "OK."
     fi
 
-    echo -n "Create extension: pgpool_regclass..."
-    _doQuery ${_NODE_NUM} "CREATE EXTENSION pgpool_regclass;"
-    if [ $? -ne 0 ]; then
-        echo "Failed."
-        echo "Please install pgpool_regclass() manually."
-        echo "Continuing anyway."
-        echo
-    else
-        echo "OK."
-    fi
+    case ${PG_MAJOR_VERSION} in
+        9.3 | 9.2 )
+            echo -n "Creating extension: pgpool_regclass..."
+            _doQuery ${_NODE_NUM} "CREATE EXTENSION pgpool_regclass;"
+            if [ $? -ne 0 ]; then
+                echo "Failed."
+                echo "Please install pgpool_regclass() manually."
+                echo "Continuing anyway."
+                echo
+            else
+                echo "OK."
+            fi
+            ;;
+    esac
 
-    echo -n "Create extension: pgpool_recovery..."
+    echo -n "Creating extension: pgpool_recovery..."
     _doQuery ${_NODE_NUM} "CREATE EXTENSION pgpool_recovery;"
     if [ $? -ne 0 ]; then
         echo "Failed."
@@ -201,12 +205,12 @@ function setupPgpool()
 
     # 1. install pgpool-II and pgpoolAdmin
     ynQuestion "Do you install pgpool really?" "yes" || return 1
-    echo "[1/4}] Install packages ... "
+    echo "[1/4] Installing packages ... "
     _installRPM || return 1
     echo
 
     # 2. rewrite pgpool.conf
-    echo -n "[2/4] Overwrite pgpool.conf..."
+    echo -n "[2/4] Overwriting pgpool.conf..."
     cp editted/pgpool.conf-node${_NODE_NUM} ${PGPOOL_CONF_DIR}/pgpool.conf
     if [ $? -ne 0 ]; then
         echo "Failed."
@@ -218,7 +222,7 @@ function setupPgpool()
     fi
 
     # 3. rewrite pcp.conf
-    echo -n "[3/4] Overwrite pcp.conf..."
+    echo -n "[3/4] Overwriting pcp.conf..."
     if [ "${PG_ADMIN_USER_PASSWORD}" != "" ]; then
         _MD5_PASSWD=`${PGPOOL_BIN_DIR}/pg_md5 ${PG_ADMIN_USER_PASSWORD}`
         echo "${PG_ADMIN_USER}:${_MD5_PASSWD}" >> editted/pcp.conf
@@ -236,7 +240,7 @@ function setupPgpool()
     echo
 
     # 4. setuid for watchdog
-    echo "[4/4] Setup watchdog ..."
+    echo "[4/4] Setting up watchdog ..."
     if [ "${USE_WATCHDOG}" == "yes" ]; then
         copySbin
         if [ $? -ne 0 ]; then
@@ -261,7 +265,7 @@ function setupPgpool()
 # ----
 function setupPgpoolAdmin()
 {
-    echo -n "[1/4] Overwrite pgmgt.conf.php..."
+    echo -n "[1/4] Overwriting pgmgt.conf.php..."
     cp editted/pgmgt.conf.php ${ADMIN_DIR}/conf/
     if [ $? -ne 0 ]; then
         echo "Failed."
@@ -273,14 +277,14 @@ function setupPgpoolAdmin()
         chmod 666 ${ADMIN_DIR}/conf/pgmgt.conf.php
     fi
 
-    echo -n "[2/4] Setup ${PID_FILE_DIR} as the directry for pgpool's pid file..."
+    echo -n "[2/4] Setting up ${PID_FILE_DIR} as the directry for pgpool's pid file..."
     if [ ! -d ${PID_FILE_DIR} ]; then
         mkdir ${PID_FILE_DIR}
     fi
     chown ${APACHE_USER}:${APACHE_USER} ${PID_FILE_DIR}
     echo "OK."
 
-    echo -n "[3/4] Setup ${PGPOOL_LOG_DIR} as pgpool's log directory..."
+    echo -n "[3/4] Setting up ${PGPOOL_LOG_DIR} as pgpool's log directory..."
     if [ ! -d ${PGPOOL_LOG_DIR} ]; then
         mkdir ${PGPOOL_LOG_DIR}
     fi
@@ -288,7 +292,7 @@ function setupPgpoolAdmin()
     chmod 777 ${PGPOOL_LOG_DIR}
     echo "OK."
 
-    echo -n "[4/4] Setup ${ADMIN_DIR} as pgpoolAdmin's work directory..."
+    echo -n "[4/4] Setting up ${ADMIN_DIR} as pgpoolAdmin's work directory..."
     chmod 777 ${ADMIN_DIR}/templates_c/
     echo "OK."
 
@@ -300,7 +304,7 @@ function setupBackend()
 {
     local _NODE_NUM=$1
 
-    echo "[1/3] Install pgpool libralies."
+    echo "[1/3] Installing pgpool libralies."
     scp ${PGPOOL_EXTENSIONS_RPM} ${BACKEND_HOST_ARR[$_NODE_NUM]}:/tmp
     doViaSSH root ${BACKEND_HOST_ARR[$_NODE_NUM]} "
         rpm -ivh /tmp/${PGPOOL_EXTENSIONS_RPM} && rm -f /tmp/${PGPOOL_EXTENSIONS_RPM} && mkdir /etc/pgpool-II
@@ -313,18 +317,18 @@ function setupBackend()
 
     # postgres #0
     if [ $? -eq 0 ]; then
-        echo "[2/3] Initalize database..."
+        echo "[2/3] Initalizing database..."
         _doInitDB ${_NODE_NUM}
         echo
-        echo "[3/3] Put configuration files."
+        echo "[3/3] Putting configuration files."
         _putPostgresConfigs ${_NODE_NUM} || return 1
 
     # other
     else
-        echo "[2/3] Initalize database..."
+        echo "[2/3] Initalizing database..."
         echo "Skipped".
         echo
-        echo "[3/3] Put configuration files..."
+        echo "[3/3] Putting configuration files..."
         echo "Skipped".
         return 1
     fi
@@ -334,7 +338,7 @@ function setupBackend()
 
 function prepareFailOver()
 {
-    echo "[1/4] Put scripts for failover."
+    echo "[1/4] Putting scripts for failover."
     sed -i -e 's/\(BACKEND_NODE_NUM=\).*$/\1/' editted/config_for_script
     for _NODE in ${PGPOOL_HOST_ARR[@]}; do
        scp editted/config_for_script $_NODE:${PGPOOL_CONF_DIR}
@@ -348,7 +352,7 @@ function prepareFailOver()
     fi
 
     # Set owner and permissions
-    echo "[2/4] Set the owner and permission of scripts."
+    echo "[2/4] Setting the owner and permission of scripts."
     for _NODE in ${PGPOOL_HOST_ARR[@]}; do
         ssh $_NODE "
         chown ${APACHE_USER}:${APACHE_USER} ${PGPOOL_CONF_DIR}/*.conf
@@ -360,11 +364,11 @@ function prepareFailOver()
     done
 
     # Setup WAL archiving
-    echo "[3/4] Created archive directory."
+    echo "[3/4] Creating archive directory."
     mkdir -p ${ARCHIVE_DIR}
     chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${ARCHIVE_DIR}
 
-    echo "[4/4] Regist pgpool's funtions."
+    echo "[4/4] Registing pgpool's funtions."
     _registPgFuncs 0
 
     echo "OK."

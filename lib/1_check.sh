@@ -23,7 +23,7 @@ function hasPackage()
 
 function checkEnv()
 {
-    echo "check for installation ..."
+    echo "Checking for installation ..."
     echo
 
     rpm -qa | grep -E "${PGPOOL_SOFTWARE_NAME}|postgresql${PG_MAJOR_VERSION_WO_DOT}|httpd|php|php-mbstring|php-pgsql" > $WORK_DIR/rpmcheck
@@ -57,6 +57,12 @@ function checkEnv()
     if [ $? -ne 0 ]; then return 1; fi
     hasPackage "php.*-mbstring" "PHP (php-mbstring)"
     if [ $? -ne 0 ]; then return 1; fi
+
+    ed --version > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Please install \"ed\" command."
+        return 1;
+    fi
 
     # root
     if [ $(id -un) != root ]; then

@@ -23,7 +23,7 @@ function _doConfigPcp()
     if [ "${DEF_PG_ADMIN_USER}" != "" ]; then
         PG_ADMIN_USER=${DEF_PG_ADMIN_USER}
     fi
-    echo -n "${PROMPT} username for pgpoolAdmin (defalt: ${PG_ADMIN_USER}) : "
+    echo -n "${PROMPT} username for pgpoolAdmin (default: ${PG_ADMIN_USER}) : "
     userInput "" ${PG_ADMIN_USER}
     PG_ADMIN_USER=${RTN}
     writeDefFile "DEF_PG_ADMIN_USER=${PG_ADMIN_USER}"
@@ -204,7 +204,7 @@ function _inputPostgresDirectoryName()
         fi
 
         # If the specified directory already exists, try to remove it.
-        echo -n "Check if the specified directory is empty..."
+        echo -n "Checking if the specified directory is empty..."
         doViaSSH root ${_HOST} "ls ${_INPUT_VAL}" > /dev/null 2>&1
 
         if [ $? -eq 0 ]; then
@@ -231,7 +231,7 @@ function _inputPostgresDirectoryName()
         # If there is not, create the new directory.
         echo "OK."
 
-        echo -n "Create the new directory..."
+        echo -n "Creating the new directory..."
         doViaSSH root ${_HOST} "
             mkdir -p ${_INPUT_VAL} && \
             chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${_INPUT_VAL}
@@ -449,19 +449,20 @@ function _doConfigPgpool()
 
     echo
     subtitle "Fail over & Online recovery"
-    echo "Failover and Online recovery  will be executed by ${PG_SUPER_USER}'."
+    echo "Failover and Online recovery will be executed by ${PG_SUPER_USER}'."
     _writePgpoolParam recovery_user "'${PG_SUPER_USER}'"
     _writePgpoolParam recovery_password "'${PG_SUPER_USER_PASSWD}'"
 
+    echo
     if [ "${REPLICATION_MODE}" = "stream" ]; then
-        echo "Setup for streaming replication mode."
+        echo "Setting up for streaming replication mode."
         echo "Streaming replication check will be executed by '${PG_SUPER_USER}'."
         _writePgpoolParam recovery_1st_stage_command "'basebackup-stream.sh'"
         _writePgpoolParam failover_command  "'${PGPOOL_CONF_DIR}/failover.sh %d %h %p %D %m %M %H %P %r %R'"
         _writePgpoolParam sr_check_user     "'${PG_SUPER_USER}'"
         _writePgpoolParam sr_check_password "'${PG_SUPER_USER_PASSWD}'"
     else
-        echo "Setup for pgpool's native replication mode."
+        echo "Setting up for pgpool's native replication mode."
         _writePgpoolParam recovery_1st_stage_command "'basebackup-replication.sh'"
         _writePgpoolParam recovery_2nd_stage_command "'pgpool_recovery_pitr'"
     fi
@@ -677,10 +678,10 @@ function pgpoolConfNode0()
     _doConfigAdmin
     _doConfigPostgres
 
-    echo "[1/3] Create config for failover and online recovery. "
+    echo "[1/3] Creating config for failover and online recovery. "
     _createConfForScript
 
-    echo "[2/3] Put scripts for failover"
+    echo "[2/3] Putting scripts for failover."
     if [ "${REPLICATION_MODE}" == "stream" ]; then
         _createRecoveryConfForSR
         cp templates/basebackup-stream.sh editted/
@@ -692,7 +693,7 @@ function pgpoolConfNode0()
     cp templates/pgpool_remote_start editted/
 
     # Rename postgresql.conf to the one for each backend nodes.
-    echo "[3/3] Put postgresql.conf."
+    echo "[3/3] Putting postgresql.conf."
     for _NODE in ${PGPOOL_HOST_ARR[*]}; do
         _RENAMED_PG_CONF="postgresql.conf-postgres${_NODE_NUM}"
         cp editted/postgresql.conf editted/${_RENAMED_PG_CONF}
@@ -717,7 +718,7 @@ function pgpoolConfNode1()
 {
     cp editted/pgpool.conf editted/pgpool.conf-node0
 
-    echo "[1/1] Modify pgpool.conf created for pgpool#0 to use watchdog."
+    echo "[1/1] Modifying pgpool.conf created for pgpool#0 to use watchdog."
     _writePgpoolParam wd_hostname            "'${PGPOOL_HOST_ARR[1]}'"
     _writePgpoolParam other_pgpool_hostname0 "'${PGPOOL_HOST_ARR[0]}'"
 

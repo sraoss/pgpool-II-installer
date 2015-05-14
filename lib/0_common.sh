@@ -51,7 +51,7 @@ function ynQuestion()
     while :; do
         echo -n ${PROMPT} "${_QUESTION} [yes/no]"
         if [ "${_DEFAULT}" != "" ]; then
-            echo -n " (defalt: ${_DEFAULT}) "
+            echo -n " (default: ${_DEFAULT}) "
         fi
         echo ": "
 
