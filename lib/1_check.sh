@@ -23,10 +23,10 @@ function hasPackage()
 
 function checkEnv()
 {
-    echo "Checking for installation ..."
+    echo "check for installation ..."
     echo
 
-    rpm -qa | grep -E "${PGPOOL_SOFTWARE_NAME}|postgresql${PG_MAJOR_VERSION_WO_DOT}|httpd|php|php-mbstring|php-pgsql" > $WORK_DIR/rpmcheck
+    rpm -qa | grep -E "${PGPOOL_SOFTWARE_NAME}|postgresql${PG_VER}|httpd|php|php-mbstring|php-pgsql" > $TEMP_FILE_RPM
 
     # OS
     if [ -f /etc/redhat-release ]; then
@@ -47,22 +47,18 @@ function checkEnv()
     fi
 
     # other
-    hasPackage "postgresql${PG_MAJOR_VERSION_WO_DOT}-server" "PostgreSQL (postgresql${PG_MAJOR_VERSION_WO_DOT}-server)"
+    hasPackage "postgresql${PG_VER}-server" "PostgreSQL (postgresql${PG_VER}-server)"
     if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "postgresql${PG_MAJOR_VERSION_WO_DOT}" "PostgreSQL (postgresql${PG_MAJOR_VERSION_WO_DOT})"
+    hasPackage "postgresql${PG_VER}" "PostgreSQL (postgresql${PG_VER})"
     if [ $? -ne 0 ]; then return 1; fi
     hasPackage "httpd" "Apache (httpd)"
     if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "php.*-pgsql" "PHP (php-pgsql)"
+    hasPackage "php-pgsql" "PHP (php-pgsql)"
     if [ $? -ne 0 ]; then return 1; fi
-    hasPackage "php.*-mbstring" "PHP (php-mbstring)"
+    hasPackage "php-mbstring" "PHP (php-mbstring)"
     if [ $? -ne 0 ]; then return 1; fi
-
-    ed --version > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Please install \"ed\" command."
-        return 1;
-    fi
+    hasPackage "php-[45]" "PHP"
+    if [ $? -ne 0 ]; then return 1; fi
 
     # root
     if [ $(id -un) != root ]; then
@@ -71,7 +67,7 @@ function checkEnv()
         return 1
     fi
 
-    rm -f $WORK_DIR/rpmcheck
+    rm -f $TEMP_FILE_RPM
     echo "OK."
     return 0
 }
@@ -83,19 +79,19 @@ function agreeLiense()
     cat COPYING
     echo
     echo $BOLD"================================================================="$SPAN_END
-    ynQuestion "Do you accept the end user software license agreement?" "yes"
+    ynQuestion "Do you accept the end user software license agreement?"
     return $?
 }
 
 function editConfigs()
 {
-    ynQuestion "Do you edit configs? If no, install will start right now without configuration." "yes"
+    ynQuestion "Do you edit configs? If no, install will start right now without configuration."
     if [ $? -ne 0 ]; then
         doInstall
         if [ $? -eq 0 ]; then
             echo "Completed!"
             echo "All configuration should be done manually."
-            exit 0
+            return 0
         else
             return 1
         fi

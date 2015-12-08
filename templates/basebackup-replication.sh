@@ -22,14 +22,14 @@ MASTER_NODE_PORT=${BACKEND_PORT_ARR[$MASTER_NODE_NUM]}
 MASTER_NODE_ARCHDIR=${BACKEND_ARCHIVE_DIR_ARR[$MASTER_NODE_NUM]}
 
 # Get the node number of destination
-getNodeNum ${MASTER_NODE_PGDATA} ${DEST_NODE_HOST} || exit 1
+getNodeNum ${DEST_NODE_PGDATA} || exit 1
 DEST_NODE_NUM=${RTN}
-DEST_NODE_HOST=${BACKEND_HOST_ARR[$DEST_NODE_NUM]}
 DEST_NODE_PORT=${BACKEND_PORT_ARR[$DEST_NODE_NUM]}
 DEST_NODE_ARCHDIR=${BACKEND_ARCHIVE_DIR_ARR[$DEST_NODE_NUM]}
 
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 date >> ${SCRIPT_LOG}
+echo "$0 $*" >> ${SCRIPT_LOG}
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 echo "" >> ${SCRIPT_LOG}
 
@@ -52,8 +52,9 @@ rsync -C -a -c --delete \
     --exclude postmaster.pid --exclude postmaster.opts --exclude pg_log \
     --exclude recovery.conf --exclude recovery.done --exclude pg_xlog \
     ${MASTER_NODE_PGDATA}/ \
-    ${PG_SUPER_USER}@${DEST_NODE_HOST}:${DEST_NODE_PGDATA}/
+    ${PG_SUPER_USER}@{$DEST_NODE_HOST}:${DEST_NODE_PGDATA}/
 
+ssh -o StrictHostKeyChecking=no ${PG_SUPER_USER}@${DEST_NODE_HOST} exit
 ssh ${PG_SUPER_USER}@${DEST_NODE_HOST} -T "mkdir ${DEST_NODE_PGDATA}/pg_xlog"
 
 # port
@@ -79,9 +80,9 @@ fi
 echo "3. create recovery.conf" >> ${SCRIPT_LOG}
 
 cat > recovery.conf <<EOF
-restore_command = 'scp ${PG_SUPER_USER}@${MASTER_NODE_HOST}:${MASTER_NODE_ARCHDIR}/%f %p'
+restore_command = 'scp ${PG_SUPER_USER}@${MASTER_NODE_HOST}:${MASTER_NODE_PGDATA}/%f %p'
 EOF
-scp recovery.conf ${PG_SUPER_USER}@${DEST_NODE_HOST}:${DEST_NODE_PGDATA}/
+scp recovery.conf ${PG_SUPER_USER}@{$DEST_NODE_HOST}:${DEST_NODE_PGDATA}/
 rm -f recovery.conf
 
 # ---------------------------------------------------------------------

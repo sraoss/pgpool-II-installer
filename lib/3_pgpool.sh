@@ -23,19 +23,19 @@ function _doConfigPcp()
     if [ "${DEF_PG_ADMIN_USER}" != "" ]; then
         PG_ADMIN_USER=${DEF_PG_ADMIN_USER}
     fi
-    echo -n "${PROMPT} username for pgpoolAdmin (default: ${PG_ADMIN_USER}) : "
+    echo -n "${PROMPT} username for pgpoolAdmin (defalt: ${PG_ADMIN_USER})"
     userInput "" ${PG_ADMIN_USER}
     PG_ADMIN_USER=${RTN}
-    writeDefFile "DEF_PG_ADMIN_USER=${PG_ADMIN_USER}"
+    writeDefFile "DEF_PG_ADMIN_USER" ${PG_ADMIN_USER}
 
     # password
     if [ "${DEF_PG_ADMIN_USER_PASSWORD}" != "" ]; then
         PG_ADMIN_USER_PASSWORD=${DEF_PG_ADMIN_USER_PASSWORD}
     fi
-    echo -n "${PROMPT} this user's password (default: ${PG_ADMIN_USER_PASSWORD}) : "
+    echo -n "${PROMPT} this user's password (default: ${PG_ADMIN_USER_PASSWORD}): "
     userInput ""  ${PG_ADMIN_USER_PASSWORD}
     PG_ADMIN_USER_PASSWORD=${RTN}
-    writeDefFile "DEF_PG_ADMIN_USER_PASSWORD=${PG_ADMIN_USER_PASSWORD}"
+    writeDefFile "DEF_PG_ADMIN_USER_PASSWORD" ${PG_ADMIN_USER_PASSWORD}
 
     echo
     return 0
@@ -118,7 +118,7 @@ function _setPgpoolParam()
     esac
 
     _writePgpoolParam ${_PARAM} ${_NEW_VAL}
-    writeDefFile "DEF_${_PARAM}=${_NEW_VAL}"
+    writeDefFile "DEF_${_PARAM}" ${_NEW_VAL}
 }
 
 function _getPgpoolParam()
@@ -194,44 +194,28 @@ function _inputPostgresDirectoryName()
 
         _checkInputParam "${_PARAM}" "${_DESCRIPTION}" ${_DEFAULT}
         _INPUT_VAL=${RTN}
-        echo "${_INPUT_VAL}" | grep -Eq '^/'
-        if [ $? -ne 0 ]; then
-            echo "NG."
-            echo "Hint) Specify an absolute path."
-            echo
-            _HAS_NG="yes"
-            continue
-        fi
 
         # If the specified directory already exists, try to remove it.
-        echo -n "Checking if the specified directory is empty..."
-        doViaSSH root ${_HOST} "ls ${_INPUT_VAL}" > /dev/null 2>&1
+        echo -n "Check if the specified directory is empty..."
+        doViaSSH ${PG_SUPER_USER} ${_HOST} "ls ${_INPUT_VAL}" > /dev/null 2>&1
 
-        if [ $? -eq 0 ]; then
+        if [ $? -ne 0 ]; then
             echo "NG."
             ynQuestion "The directory already exists. Remove?" "yes"
             if [ $? -eq 0 ]; then
-                doViaSSH ${PG_SUPER_USER} ${_HOST} "rm -rf ${_INPUT_VAL}/*" > /dev/null
-                if [ $? -ne 0 ]; then
-                    echo "NG."
-                    echo "Hint) Try to specify another directoy."
-                    echo
-                    _HAS_NG="yes"
-                    continue
-                fi
+                doViaSSH root ${_HOST} "rm -rf ${_INPUT_VAL}/*" > /dev/null 2>&1
             else
                 echo "NG."
                 echo "Hint) Try to specify another directoy."
                 echo
                 _HAS_NG="yes"
-                continue
             fi
         fi
 
         # If there is not, create the new directory.
         echo "OK."
 
-        echo -n "Creating the new directory..."
+        echo -n "Create the new directory..."
         doViaSSH root ${_HOST} "
             mkdir -p ${_INPUT_VAL} && \
             chown ${PG_SUPER_USER}:${PG_SUPER_USER} ${_INPUT_VAL}
@@ -277,7 +261,7 @@ function _setBackends()
         _inputPostgresDirectoryName "${_NODE}" "backend_data_directory${_NODE_NUM}" "Data directory" "${_PGDATA_DEFAULT}"
         _writePgpoolParam "backend_data_directory${_NODE_NUM}" "'${RTN}'"
         PGDATA_ARR+=("${RTN}")
-        writeDefFile "DEF_PGDATA_ARR[${_NODE_NUM}]=${RTN}"
+        writeDefFile "DEF_PGDATA_ARR[${_NODE_NUM}]" ${RTN}
         echo
 
         # Validate archive directory (postgresql.conf)
@@ -288,7 +272,7 @@ function _setBackends()
         echo
         _inputPostgresDirectoryName ${_NODE} "archive_command" "the directory where to archive a logfile segment" ${_ARCHIVE_DIR_DEFAULT}
         ARCHIVE_DIR_ARR+=("${RTN}")
-        writeDefFile "DEF_ARCHIVE_DIR_ARR[${_NODE_NUM}]=${RTN}"
+        writeDefFile "DEF_ARCHIVE_DIR_ARR[${_NODE_NUM}]" ${RTN}
         echo
 
         _NODE_NUM=`expr ${_NODE_NUM} + 1`
@@ -298,7 +282,6 @@ function _setBackends()
 function _setWatchdog()
 {
     local _INPUT_VAL=""
-    local _DEFAULT=${DEF_PGPOOL_WD_METHOD}
 
     _writePgpoolParam use_watchdog on
     _setPgpoolParam   delegate_IP  "delegate IP address" ${DEF_delegate_IP}
@@ -315,26 +298,15 @@ function _setWatchdog()
     # lifecheck
     while :; do
         echo ${PROMPT} "method of watchdog lifecheck (heartbeat / query)"
-        if [ "${_DEFAULT}" != "" ]; then
-            echo -n "(default: ${_DEFAULT}) : "
-        fi
         read _INPUT_VAL
         case ${_INPUT_VAL} in
             heartbeat|h)
                 _INPUT_VAL="heartbeat"
-                writeDefFile "DEF_PGPOOL_WD_METHOD=${_INPUT_VAL}"
                 break
                 ;;
             query|q)
                 _INPUT_VAL="query"
-                writeDefFile "DEF_PGPOOL_WD_METHOD=${_INPUT_VAL}"
                 break
-                ;;
-            '')
-                _INPUT_VAL=${_DEFAULT}
-                if [ "${_INPUT_VAL}" == "heartbeat" ] || [ "${_INPUT_VAL}" == "query" ]; then
-                    break
-                fi
                 ;;
         esac
     done
@@ -388,7 +360,7 @@ function _doConfigPgpool()
     while :; do
         echo -n ${PROMPT} "Which replication mode do you use?"
         if [ "${DEF_REPLICATION_MODE}" != "" ]; then
-            echo -n " (default: ${DEF_REPLICATION_MODE})"
+            echo -n " (default: ${DEF_REPLICATION_MODE}}"
             echo
         fi
         echo
@@ -401,7 +373,7 @@ function _doConfigPgpool()
         case ${RTN} in
         native)
             _writePgpoolParam replication_mode on
-            REPLICATION_MODE="native"
+            REPLICATION_MODE="replication"
             break
             ;;
         stream)
@@ -412,14 +384,23 @@ function _doConfigPgpool()
             ;;
         esac
     done
-    writeDefFile "DEF_REPLICATION_MODE=${REPLICATION_MODE}"
+    writeDefFile "DEF_REPLICATION_MODE" ${REPLICATION_MODE}
 
-    ynQuestion "Do you use load balancing?" "yes"
+    _DEFAULT="yes"
+    if [ "${DEF_LOAD_BALANCE_MODE}" != "" ]; then
+        _DEFAULT=${DEF_LOAD_BALANCE_MODE}
+    fi
+    ynQuestion "Do you use load balancing?" ${_DEFAULT}
     if [ $? -eq 0 ]; then
         _writePgpoolParam load_balance_mode on
+        writeDefFile "DEF_LOAD_BALANCE_MODE" on
     fi
 
-    ynQuestion "Do you use on memory query cache with shared memory?" "no"
+    _DEFAULT="no"
+    if [ "${DEF_QUERY_CACHE}" != "" ]; then
+        _DEFAULT=${DEF_QUERY_CACHE}
+    fi
+    ynQuestion "Do you use on memory query cache with shared memory?" ${_DEFAULT}
     if [ $? -eq 0 ]; then
         _writePgpoolParam memory_cache_enabled on
         _writePgpoolParam memqcache_method     "'shmem'"
@@ -449,20 +430,19 @@ function _doConfigPgpool()
 
     echo
     subtitle "Fail over & Online recovery"
-    echo "Failover and Online recovery will be executed by ${PG_SUPER_USER}'."
+    echo "Failover and Online recovery  will be executed by ${PG_SUPER_USER}'."
     _writePgpoolParam recovery_user "'${PG_SUPER_USER}'"
     _writePgpoolParam recovery_password "'${PG_SUPER_USER_PASSWD}'"
 
-    echo
     if [ "${REPLICATION_MODE}" = "stream" ]; then
-        echo "Setting up for streaming replication mode."
+        echo "Setup for streaming replication mode."
         echo "Streaming replication check will be executed by '${PG_SUPER_USER}'."
         _writePgpoolParam recovery_1st_stage_command "'basebackup-stream.sh'"
         _writePgpoolParam failover_command  "'${PGPOOL_CONF_DIR}/failover.sh %d %h %p %D %m %M %H %P %r %R'"
         _writePgpoolParam sr_check_user     "'${PG_SUPER_USER}'"
         _writePgpoolParam sr_check_password "'${PG_SUPER_USER_PASSWD}'"
     else
-        echo "Setting up for pgpool's native replication mode."
+        echo "Setup for pgpool's native replication mode."
         _writePgpoolParam recovery_1st_stage_command "'basebackup-replication.sh'"
         _writePgpoolParam recovery_2nd_stage_command "'pgpool_recovery_pitr'"
     fi
@@ -533,7 +513,6 @@ function _writeAdminParam()
 
 function _doConfigAdmin()
 {
-    local _DEFAULT=${DEF_PG_ADMIN_LANG}
     title "[pgpool-II] Configuration for pgpoolAdmin ..."
 
     cp templates/pgmgt.conf.php editted/
@@ -541,26 +520,21 @@ function _doConfigAdmin()
 
     while :; do
         echo ${PROMPT} "Which language do you use? (en/fr/ja/zh_cn)"
-        if [ "${_DEFAULT}" != "" ]; then
-            echo -n "(default: ${_DEFAULT}) : "
-        fi
 
         read _INPUT_VAL
+
+        if [ "${_INPUT_VAL}" == "" && "${DEF_PG_ADMIN_LANG}" != "" ]; then
+            _INPUT_VAL=${DEF_PG_ADMIN_LANG}
+        fi
+
         case ${_INPUT_VAL} in
         en | fr | ja | zh_cn )
             _writeAdminParam "_PGPOOL2_LANG" ${_INPUT_VAL}
-            writeDefFile "DEF_PG_ADMIN_LANG=${_INPUT_VAL}"
             break
-            ;;
-        '')
-            _INPUT_VAL=${_DEFAULT}
-            if $(echo "${_INPUT_VAL}" | grep -Eq "en|fr|ja|zh_cn"); then
-            _writeAdminParam "_PGPOOL2_LANG" ${_INPUT_VAL}
-                break
-            fi
             ;;
         esac
     done
+    writeDefFile "DEF_PG_ADMIN_LANG" ${_INPUT_VAL}
 
     _writeAdminParam _PGPOOL2_VERSION             ${MAJOR_VERSION}
     _writeAdminParam _PGPOOL2_CONFIG_FILE         ${PGPOOL_CONF_DIR}/pgpool.conf
@@ -678,10 +652,10 @@ function pgpoolConfNode0()
     _doConfigAdmin
     _doConfigPostgres
 
-    echo "[1/3] Creating config for failover and online recovery. "
+    echo "[1/3] Create config for failover and online recovery. "
     _createConfForScript
 
-    echo "[2/3] Putting scripts for failover."
+    echo "[2/3] Put scripts for failover"
     if [ "${REPLICATION_MODE}" == "stream" ]; then
         _createRecoveryConfForSR
         cp templates/basebackup-stream.sh editted/
@@ -693,7 +667,7 @@ function pgpoolConfNode0()
     cp templates/pgpool_remote_start editted/
 
     # Rename postgresql.conf to the one for each backend nodes.
-    echo "[3/3] Putting postgresql.conf."
+    echo "[3/3] Put postgresql.conf."
     for _NODE in ${PGPOOL_HOST_ARR[*]}; do
         _RENAMED_PG_CONF="postgresql.conf-postgres${_NODE_NUM}"
         cp editted/postgresql.conf editted/${_RENAMED_PG_CONF}
@@ -708,8 +682,6 @@ function pgpoolConfNode0()
         _NODE_NUM=`expr ${_NODE_NUM} + 1`
     done
 
-    cp editted/pgpool.conf editted/pgpool.conf-node0
-
     echo
     return 0
 }
@@ -718,7 +690,7 @@ function pgpoolConfNode1()
 {
     cp editted/pgpool.conf editted/pgpool.conf-node0
 
-    echo "[1/1] Modifying pgpool.conf created for pgpool#0 to use watchdog."
+    echo "[1/1] Modify pgpool.conf created for pgpool#0 to use watchdog."
     _writePgpoolParam wd_hostname            "'${PGPOOL_HOST_ARR[1]}'"
     _writePgpoolParam other_pgpool_hostname0 "'${PGPOOL_HOST_ARR[0]}'"
 

@@ -33,6 +33,7 @@ NEW_MASTER_NODE_PGDATA=${10}
 
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 date >> ${SCRIPT_LOG}
+echo "$0 $*" >> ${SCRIPT_LOG}
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 echo "" >> ${SCRIPT_LOG}
 
@@ -65,6 +66,7 @@ if [ "${FAILED_NODE_ID}" == "${OLD_PRIMARY_NODE_ID}" ]; then
     echo "Node ${NEW_MASTER_NODE_ID} takes over the primary." >> ${SCRIPT_LOG}
 
     echo "Execute: ${PROMOTE_COMMAND}" >> ${SCRIPT_LOG}
+    ssh -o StrictHostKeyChecking=no ${PG_SUPER_USER}@${NEW_MASTER_NODE_HOST} exit
     ssh ${PG_SUPER_USER}@${NEW_MASTER_NODE_HOST} -T "${PROMOTE_COMMAND}" >> ${SCRIPT_LOG}
 
 else

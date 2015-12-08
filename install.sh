@@ -21,7 +21,6 @@
 # main
 # ===================================================================
 
-source lib/version.sh
 source lib/params.sh
 source lib/0_common.sh
 source lib/1_check.sh
@@ -36,8 +35,8 @@ clearScreen
 # -------------------------------------------------------------------
 
 # 1-1. check environment
-checkEnv
-if [ $? -ne 0 ]; then exit 1; fi
+#checkEnv
+#if [ $? -ne 0 ]; then exit 1; fi
 # 1-2. license agreement
 agreeLiense
 if [ $? -ne 0 ]; then exit 1; fi
@@ -47,17 +46,22 @@ editConfigs
 if [ $? -ne 0 ]; then exit 1; fi
 
 if [ -e installer.conf ]; then
-    ynQuestion "There is the file installer.conf. Do you use it?" "yes"
+    ynQuestion "There is the file installer.conf. Do you use it?"
     if [ $? -eq 0 ]; then
         source installer.conf > /dev/null 2>&1
-        mv installer.conf installer.bak
+        mv installer.conf installer-`date +'%Y%m%d_%H%M'`.conf
         echo "Loaded."
+
     else
-        rm -f installer.conf
+        mv installer.conf installer-`date +'%Y%m%d_%H%M'`.conf
         echo "Deleted."
         touch installer.conf
     fi
 fi
+
+if [ $# -ne 0]; then
+FI
+
 
 goNext
 
@@ -68,17 +72,11 @@ goNext
 title "Configuring Hosts, User, SSH"
 
 subtitle "Watchdog"
-until [[ ${REPLY} =~ [yY][eE][sS] || ${REPLY} =~ [nN][oO] ]]; do
-    _DEFAULT="${DEF_PGPOOL_WATCHDOG}"
-    ynQuestion "Do you use the watchdog feature of pgpool?" ${_DEFAULT}
-    if [ $? -eq 0 ]; then
-        USE_WATCHDOG="yes"
-    else
-        USE_WATCHDOG="no"
-    fi
-    echo
-done
-writeDefFile "DEF_PGPOOL_WATCHDOG=${REPLY}"
+ynQuestion "Do you use the watchdog feature of pgpool?"
+if [ $? -eq 0 ]; then
+    USE_WATCHDOG="yes"
+fi
+echo
 
 subtitle "Specify the nodes in this cluster"
 specifyNodes
@@ -141,14 +139,13 @@ if [ "${USE_WATCHDOG}" == "yes" ]; then
     subtitle "Setup pgpool-II"
 
     doViaSSH root ${PGPOOL_HOST_ARR[1]} "
-        mkdir ${REMOTE_WORK_DIR}
+        mkdir ${REMOTER_WORK_DIR}
     " > /dev/null 2>&1
     scp -r ./* ${PGPOOL_HOST_ARR[1]}:${REMOTE_WORK_DIR}/ > /dev/null 2>&1
     echo
 
     doViaSSH root ${PGPOOL_HOST_ARR[1]} "
         cd ${REMOTE_WORK_DIR}
-        source lib/version.sh
         echo \"USE_WATCHDOG=yes\" >> lib/params.sh
         source lib/params.sh
         source lib/0_common.sh
@@ -159,7 +156,6 @@ if [ "${USE_WATCHDOG}" == "yes" ]; then
     subtitle "Setup pgpoolAdmin"
     doViaSSH root ${PGPOOL_HOST_ARR[1]} "
         cd ${REMOTE_WORK_DIR}
-        source lib/version.sh
         source lib/params.sh
         source lib/0_common.sh
         source lib/4_install.sh

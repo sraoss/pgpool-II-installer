@@ -35,7 +35,17 @@ function readValList()
 
 function writeDefFile()
 {
-    echo "$1" >> installer.conf
+    local _PARAM=$1
+    local _VAL=$2
+
+    # Try replacing
+    sed -i "s|^${_PARAM}=.*|${_PARAM}=${_VAL}|" installer.conf && return 0
+
+    # Add
+    grep ${_PARAM} installer.conf > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "${_PARAM}=${_VAL}" >> installer.conf
+    fi
 }
 
 
@@ -51,7 +61,7 @@ function ynQuestion()
     while :; do
         echo -n ${PROMPT} "${_QUESTION} [yes/no]"
         if [ "${_DEFAULT}" != "" ]; then
-            echo -n " (default: ${_DEFAULT}) "
+            echo -n " (${_DEFAULT})"
         fi
         echo ": "
 
@@ -59,22 +69,16 @@ function ynQuestion()
         if [ "${REPLY}" != "" ]; then
             case ${REPLY} in
                 [yY] | [yY][eE][sS])
-                    REPLY="yes"
                     return 0
                     ;;
                 [nN] | [nN][oO])
-                    REPLY="no"
                     return 1
                     ;;
             esac
 
         elif [ "${_DEFAULT}" != "" ]; then
             REPLY=${_DEFAULT}
-            if [ ${REPLY} == "yes" ]; then
-                return 0
-            elif [ ${REPLY} == "no" ]; then
-                return 1
-            fi
+            return 0
         fi
     done
 }
@@ -148,7 +152,6 @@ function userInput()
             if [ "${_TYPE}" == "hostname" ]; then
                 if [ "${_INPUT_VAL}" == "localhost" ]; then
                     echo "NG. Please input actual hostname or IP address."
-                    continue
                 else
                     break
                 fi
@@ -167,10 +170,6 @@ function userInput()
         # Return the default value if it eixsts
         elif [ "${_DEFAULT}" != "" ]; then
             _INPUT_VAL=${_DEFAULT}
-            if [ "${_INPUT_VAL}" == "localhost" ]; then
-                echo "NG. Please input actual hostname or IP address."
-                continue
-            fi
             echo "(Use default value: ${_DEFAULT})"
             break
 
@@ -194,25 +193,8 @@ function doViaSSH()
     local _COMMAND=$3
 
     if [ "${_EXEC_USER}" == "`whoami`" ]; then
-        ssh -o StrictHostKeyChecking=no ${_DEST} "${_COMMAND}"
+        ssh ${_DEST} "${_COMMAND}"
     else
-        su - ${_EXEC_USER} -c "ssh -o StrictHostKeyChecking=no ${_DEST} \"${_COMMAND}\""
+        su - ${_EXEC_USER} -c "ssh ${_DEST} \"${_COMMAND}\""
     fi
-}
-
-# -------------------------------------------------------------------
-# Install
-# -------------------------------------------------------------------
-
-function doInstall()
-{
-    echo "* Install packages ... "
-    rpm -ivh ${PACKAGE_FILE_ARR[@]}
-    if [ $? -ne 0 ]; then
-        echo "Failed."
-        return 1
-    fi
-    echo
-    echo "OK."
-    return 0
 }

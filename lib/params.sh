@@ -28,6 +28,7 @@ NETMASK="255.255.255.0"
 # ---------------------------------------------------------------------
 
 # params for packagers
+PG_MAJOR_VERSION=9.3
 PG_MAJOR_VERSION_WO_DOT=${PG_MAJOR_VERSION/./}
 POSTGRES_PACKAGE_NAME="postgresql${PG_MAJOR_VERSION_WO_DOT}"
 
@@ -48,18 +49,12 @@ ARCHIVE_DIR="${PG_SUPER_USER_HOME}/archivedir"
 # ---------------------------------------------------------------------
 
 # params for packagers (users shouldn't change)
+MAJOR_VERSION=3.3
 DIST="pgdg"
 PGPOOL_SOFTWARE_NAME="pgpool-II"
-
-# - pgpool-II:
-#   ex.) pgpool-II-pg94-3.4.2-1pgdg.rhel7.x86_64.rpm
-PGPOOL_PG_NAME="${PGPOOL_SOFTWARE_NAME}-pg${PG_MAJOR_VERSION_WO_DOT}"
-PGPOOL_RPM_VERSION="${P_VERSION}-${P_RELEASE}"
-
-# - pgpool-II extensions:
-#   ex.) pgpool-II-pg94-extensions-3.4.2-1pgdg.rhel7.x86_64.rpm
-PGPOOL_RPM="${PGPOOL_PG_NAME}-${PGPOOL_RPM_VERSION}${DIST}.rhel${CENTOS_VERSION}.${ARCHITECTURE}.rpm"
-PGPOOL_EXTENSIONS_RPM="${PGPOOL_PG_NAME}-extensions-${PGPOOL_RPM_VERSION}${DIST}.rhel${CENTOS_VERSION}.${ARCHITECTURE}.rpm"
+P_VERSION=3.3.3
+P_RELEASE=1
+PGPOOL_RPM="${PGPOOL_SOFTWARE_NAME}-pg${PG_MAJOR_VERSION_WO_DOT}-${P_VERSION}-${P_RELEASE}.${DIST}.${ARCHITECTURE}.rpm"
 
 # params to not be changed (specified in RPM spec file)
 PGPOOL_BIN_DIR="/usr/bin"
@@ -83,11 +78,9 @@ USE_WATCHDOG="no"
 
 # params for packagers (users shouldn't change)
 ADMIN_SOFTWARE_NAME="pgpoolAdmin"
-ADMIN_RPM_VERSION="${A_VERSION}-${A_RELEASE}"
-
-# - pgpoolAdmin:
-#   ex.) pgpoolAdmin-3.4.1-2pgdg.rhel7.noarch.rpm
-PGPOOL_ADMIN_RPM="${ADMIN_SOFTWARE_NAME}-${ADMIN_RPM_VERSION}${DIST}.rhel${CENTOS_VERSION}.noarch.rpm"
+A_VERSION=3.3.1
+A_RELEASE=1
+PGPOOL_ADMIN_RPM="${ADMIN_SOFTWARE_NAME}-${A_VERSION}-${A_RELEASE}.${DIST}.noarch.rpm"
 
 # params to not be changed (specified in RPM spec file)
 ADMIN_DIR="/var/www/html/pgpoolAdmin"

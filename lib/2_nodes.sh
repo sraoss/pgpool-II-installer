@@ -12,7 +12,7 @@ function _inputHostName()
 
     echo -n ${PROMPT} "Specify hostname or IP address "
     if [ "${_DEFAULT}" != "" ]; then
-        echo -n " (default: ${_DEFAULT}) "
+        echo -n "(default ${_DEFAULT}) "
     fi
     echo ": "
     userInput hostname ${_DEFAULT}
@@ -30,7 +30,7 @@ function _inputPort()
        _DEFAULT=${_CONF_NODE}
     fi
 
-    echo ${PROMPT} "Specify port number (default: ${_DEFAULT}) : "
+    echo ${PROMPT} "Specify port number (default ${_DEFAULT}): "
     userInput integer ${_DEFAULT}
 
     return 0
@@ -46,11 +46,11 @@ function setupUserApache()
 
     id ${APACHE_USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo "Creating apache user."
+        echo "Create apache user."
         useradd -d ${_APACHE_HOME} -s /bin/bash ${APACHE_USER} || return 1
 
     else
-        echo "Creating ${_APACHE_HOME} as ${APACHE_USER}'s home directory."
+        echo "Create ${_APACHE_HOME} as ${APACHE_USER}'s home directory."
         if [ ! -e ${_APACHE_HOME} ]; then
             mkdir ${_APACHE_HOME} -m 700
         fi
@@ -61,18 +61,18 @@ function setupUserApache()
         if [ $? -ne 0 ]; then
             # Stop httpd.
             # Because if there are processes of apache user, usermod fails.
-            echo "Httpd must be stopped. Stopping httpd"
+            echo "Httpd must be stopped. Stop httpd"
             service httpd stop
             if [ `ps -ef | grep ${APACHE_USER} | wc -l` -eq 0 ]; then
                 return 1
             fi
 
-            echo "Modifying apache user's info."
+            echo "Modify apache user's info."
             usermod -d ${_APACHE_HOME} -s /bin/bash ${APACHE_USER} || return 1
         fi
     fi
 
-    echo "Trying to execute 'su - apache'."
+    echo "Try to execute 'su - apache'."
     su - ${APACHE_USER} -c "exit" || return 1
 
     echo
@@ -97,31 +97,6 @@ EOF"
     return $?
 }
 
-function _createSSHConfig()
-{
-    local _THIS_USER=$1
-
-    local _HOME=`eval echo ~${_THIS_USER}`
-    local _SSH_DIR=${_HOME}/.ssh
-    local _SSH_CONFIG=${_SSH_DIR}/config
-
-    if [ ! -e ${_SSH_CONFIG} ]; then
-        touch ${_SSH_CONFIG}
-    fi
-
-    for _NODE in `arrayUnique ${PGPOOL_HOST_ARR[*]} ${BACKEND_HOST_ARR[*]}`; do
-        if $(grep -Eq "^Host ${_NODE}$" "${_SSH_CONFIG}"); then
-            break
-        fi
-        cat >>${_SSH_CONFIG} <<EOT
-
-# Added by pgpool-II install.sh
-Host ${_NODE}
-StrictHostKeyChecking no
-EOT
-    done
-}
-
 function _putSSHkey()
 {
     local _THIS_USER=$1
@@ -135,17 +110,16 @@ function _putSSHkey()
     echo "[ssh] ${_THIS_USER}@${_HOSTNAME}-> ${_REMOTE_USER}@${_REMOTE_HOST}"
 
     if [ ! -e ${_SSH_DIR}/id_rsa ] || [ ! -e ${_SSH_DIR}/id_rsa.pub ]; then
-        echo "Creating the new SSH key."
+        echo "Create the new SSH key."
         _createSSHkey ${_THIS_USER} || return 1
-        _createSSHConfig ${_THIS_USER} || return 1
     else
         echo "The SSH key for ${THIS_USER}@${_HOSTNAME} was found. Use ${_SSH_DIR}/id_rsa."
     fi
 
-    echo "Copying the public key to ${_REMOTE_USER}@${_REMOTE_HOST}."
+    echo "Copy the public key to ${_REMOTE_USER}@${_REMOTE_HOST}."
     ssh-copy-id -i ${_SSH_DIR}/id_rsa.pub ${_REMOTE_USER}@${_REMOTE_HOST} > /dev/null 2>&1 || return 1
 
-    echo -n "Trying SSH..."
+    echo -n "Try SSH..."
     su - ${_THIS_USER} -c \
         "ssh -o StrictHostKeyChecking=no ${_REMOTE_USER}@${_REMOTE_HOST} exit" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -207,13 +181,13 @@ function _setupSshAnotherPgpoolServer()
     local _APACHE_HOME=`eval echo ~${APACHE_USER}`
     local _DEST_HOST=${PGPOOL_HOST_ARR[1]}
 
-    echo "[1/2] Setting up apache's home directory."
+    echo "[1/2] Setup apache's home directory."
 
     # Prepare scripts
     copyScripts ${_DEST_HOST} > /dev/null 2>&1 || return 1
 
-    # Copy the private key and the config
-    scp ~/.ssh/{id_rsa,config} ${_DEST_HOST}:~/.ssh/ > /dev/null 2>&1
+    # Copy the private key
+    scp ~/.ssh/id_rsa ${_DEST_HOST}:~/.ssh/ > /dev/null 2>&1
 
     # Make apache user to be able to login and create /home/apache
     doViaSSH root ${_DEST_HOST} "
@@ -223,7 +197,7 @@ function _setupSshAnotherPgpoolServer()
         setupUserApache
     " > /dev/null 2>&1 || return 1
 
-    echo "[2/2] Copying the same private keys as root@${PGPOOL_HOST_ARR[0]}."
+    echo "[2/2] Copy the same private keys as root@${PGPOOL_HOST_ARR[0]}."
 
     # Put a private key in each uesers
     doViaSSH root ${_DEST_HOST} "
@@ -300,33 +274,33 @@ function setupSSHwoPW()
     local _NODE=""
 
     # Make apache user to be able to login and create /home/apache
-    setupUserApache || return 1
-
-    # ---------------------------------------------------------------------
-    # Setup in pgpool#1
-    # ---------------------------------------------------------------------
-
-    subtitle "Setting up password-less access over SSH [ pgpool#0 ]"
-
-    # For convenience to install pgpool
-    echo "* Setting up SSH from ${PGPOOL_HOST_ARR[0]} ..."
-    echo
-    for _NODE in `arrayUnique ${PGPOOL_HOST_ARR[*]}`; do
-        _putSSHkey root root ${_NODE} || return 1
-    done
+    setupUserApache > /dev/null 2>&1 || return 1
 
     # Copy root's ssh directory to postgres and apache user.
     copySshKeyToUser ${PG_SUPER_USER} > /dev/null 2>&1 || return 1
     copySshKeyToUser ${APACHE_USER} > /dev/null 2>&1 || return 1
 
     # ---------------------------------------------------------------------
+    # Setup in pgpool#1
+    # ---------------------------------------------------------------------
+
+    subtitle "Setup password-less access over SSH [ pgpool#0 ]"
+
+    # For convenience to install pgpool
+    echo "* Setup SSH from ${PGPOOL_HOST_ARR[0]} ..."
+    echo
+    for _NODE in `arrayUnique ${PGPOOL_HOST_ARR[*]}`; do
+        _putSSHkey root root ${_NODE} || return 1
+    done
+
+    # ---------------------------------------------------------------------
     # Setup in pgpool#2
     # ---------------------------------------------------------------------
 
     if [ "${USE_WATCHDOG}" == "yes" ]; then
-        subtitle "Setting up password-less access over SSH [ pgpool#1 ]"
+        subtitle "Setup password-less access over SSH [ pgpool#1 ]"
 
-        echo "* Setting up SSH from ${PGPOOL_HOST_ARR[1]} ..."
+        echo "* Setup SSH from ${PGPOOL_HOST_ARR[1]} ..."
         echo
         _setupSshAnotherPgpoolServer || return 1
     fi
@@ -339,19 +313,19 @@ function setupSSHwoPW()
     # Copy /root/.ssh in pgpool#1's to each backends.
     _NODE_NUM=0
     for _NODE in `arrayUnique ${BACKEND_HOST_ARR[*]}`; do
-        subtitle "Setting up password-less access over SSH [ PostgreSQL#${_NODE_NUM} ]"
+        subtitle "Setup password-less access over SSH [ PostgreSQL#${_NODE_NUM} ]"
 
-        echo "* Setting up SSH from ${_NODE} ..."
+        echo "* Setup SSH from ${_NODE} ..."
         echo
-        echo "[1/1] Copying the same private keys as root@${PGPOOL_HOST_ARR[0]}."
+        echo "[1/1] Copied the same private keys as root@${PGPOOL_HOST_ARR[0]}."
 
         _putSSHkey root root ${_NODE} || return 1
 
         # Prepare scripts
         copyScripts ${_NODE} > /dev/null 2>&1 || return 1
 
-        # Copy the private key and config
-        scp ~/.ssh/{id_rsa,config} ${_NODE}:~/.ssh/ > /dev/null 2>&1
+        # Copy the private key
+        scp ~/.ssh/id_rsa ${_NODE}:~/.ssh/ > /dev/null 2>&1
 
         # Copy root's private key as postgres's apache's.
         doViaSSH root ${_NODE} "
@@ -359,6 +333,7 @@ function setupSSHwoPW()
             source lib/params.sh
             source lib/2_nodes.sh
             copySshKeyToUser ${PG_SUPER_USER}
+            copySshKeyToUser ${APACHE_USER}
         "
         _NODE_NUM=`expr ${_NODE_NUM} + 1`
         echo
@@ -380,7 +355,7 @@ function checkPostgresInstalled()
     # ====
     PGHOME=${_DEFAULT}
     for _NODE in `arrayUnique ${BACKEND_HOST_ARR[*]}`; do
-        echo "Confirming if there is PostgreSQL in ${_NODE}."
+        echo "Confirm if there is PostgreSQL in ${_NODE}."
 
         doViaSSH ${PG_SUPER_USER} ${PG_SUPER_USER}@${_NODE} "
             test -s ${PGHOME}/bin/pg_config
@@ -402,13 +377,13 @@ function checkPostgresInstalled()
 
     while :; do
         # Input the PostgreSQL bin direcgtory
-        echo ${PROMPT} "the directory where PostgreSQL is installed (default: ${_DEFAULT}): "
+        echo ${PROMPT} "the directory where PostgreSQL is installed (default ${_DEFAULT})"
         userInput "" ${_DEFAULT} && PGHOME=${RTN}
 
         # Check if there is pg_config in each backends
         _HAS_NG="no"
         for _NODE in `arrayUnique ${BACKEND_HOST_ARR[*]}`; do
-            echo "Confirming if there is PostgreSQL in ${_NODE}."
+            echo "Confirm if there is PostgreSQL in ${_NODE}."
 
             doViaSSH ${PG_SUPER_USER} ${PG_SUPER_USER}@${_NODE} "
                 test -s ${PGHOME}/bin/pg_config

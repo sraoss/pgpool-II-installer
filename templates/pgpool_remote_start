@@ -15,6 +15,7 @@ DEST_HOST_PGDATA=$2
 
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 date >> ${SCRIPT_LOG}
+echo "$0 $*" >> ${SCRIPT_LOG}
 echo "----------------------------------------------------------------------" >> ${SCRIPT_LOG}
 echo "" >> ${SCRIPT_LOG}
 
@@ -27,6 +28,7 @@ COMMAND           ${COMMAND}
 " >> ${SCRIPT_LOG}
 
 echo "remote start" >> ${SCRIPT_LOG}
+ssh -o StrictHostKeyChecking=no ${PG_SUPER_USER}@${DEST_HOST} exit
 ssh ${PG_SUPER_USER}@${DEST_HOST} -T "${COMMAND}"
 
 ps auwx | grep postgres >> ${SCRIPT_LOG}
